@@ -247,15 +247,19 @@ const VISIBLE_ROWS = 3;
 const STRIP_SIZE = 40;      // ячеек в ленте — много, чтобы создавалась иллюзия бесконечности
 
 /**
- * Высота одной ячейки барабана. Считается из реального размера .reel
- * в DOM — так JS всегда совпадает с CSS на любом брейкпоинте
- * (десктоп / планшет / мобайл / узкий мобайл / landscape).
+ * Высота одной ячейки барабана. Считается из CSS box-размера .reel
+ * через offsetHeight — это значение игнорирует CSS transforms
+ * (scale у frameIn / screenIn анимации), поэтому JS всегда совпадает
+ * с реальной CSS-высотой на любом брейкпоинте.
+ *
+ * ВАЖНО: использовать getBoundingClientRect здесь нельзя — он
+ * учитывает activeный transform: scale() и возвращает заниженную высоту,
+ * из-за чего барабан остановится не на той ячейке.
  */
 function cellHeight() {
   const reel = document.querySelector('.reel');
-  if (reel) {
-    const h = reel.getBoundingClientRect().height / VISIBLE_ROWS;
-    if (h > 10) return h;
+  if (reel && reel.offsetHeight > 10) {
+    return reel.offsetHeight / VISIBLE_ROWS;
   }
   // фолбек, если барабанов ещё нет в DOM
   if (window.innerWidth <= 380) return 55;

@@ -1,0 +1,593 @@
+/* === Базовый сброс === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #050207;
+  --fg: #f3eaff;
+  --muted: #7b6a91;
+  --purple: #a855f7;
+  --purple-bright: #c084fc;
+  --purple-deep: #6b21a8;
+  --neon: #b45cff;
+  --line: rgba(168, 85, 247, 0.18);
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  overflow: hidden;
+  cursor: none;
+}
+
+button, input { cursor: none; font-family: inherit; }
+
+/* === Кастомный курсор === */
+.cursor-dot, .cursor-ring {
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--purple-bright);
+  box-shadow: 0 0 12px var(--purple-bright), 0 0 24px var(--purple);
+  transition: width 0.2s, height 0.2s, background 0.2s;
+}
+.cursor-ring {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid rgba(192, 132, 252, 0.5);
+  transition: width 0.25s ease, height 0.25s ease, border-color 0.25s, transform 0.08s ease-out;
+  backdrop-filter: blur(2px);
+}
+.cursor-ring.hover {
+  width: 56px;
+  height: 56px;
+  border-color: var(--purple-bright);
+  background: rgba(168, 85, 247, 0.08);
+}
+.cursor-dot.hover {
+  width: 10px;
+  height: 10px;
+}
+
+/* === SVG defs не должны занимать место === */
+.svg-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* === Фоновый канвас === */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  filter: blur(50px);
+  opacity: 0.85;
+  transition: opacity 1.1s ease, filter 1.1s ease;
+}
+#bg-canvas.spinning {
+  opacity: 1;
+  filter: blur(42px) saturate(1.35);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse at top, rgba(168, 85, 247, 0.08), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+}
+
+/* === Контейнер === */
+.container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.screen {
+  width: 100%;
+  max-width: 640px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  opacity: 0;
+  transform: translateY(20px) scale(0.98);
+}
+.screen.active {
+  display: flex;
+  animation: screenIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.screen.exiting {
+  display: flex;
+  animation: screenOut 0.55s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+@keyframes screenIn {
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes screenOut {
+  to { opacity: 0; transform: translateY(-30px) scale(0.95); filter: blur(6px); }
+}
+
+/* === Заголовок === */
+.title {
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  text-align: center;
+  text-transform: uppercase;
+}
+.title-line { display: block; }
+.title-line.accent {
+  background: linear-gradient(135deg, var(--purple-bright) 0%, var(--purple) 50%, #e9d5ff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 24px rgba(168, 85, 247, 0.4));
+}
+.subtitle {
+  color: var(--muted);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* === Список имён === */
+.names-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 4px;
+}
+.names-list::-webkit-scrollbar { width: 4px; }
+.names-list::-webkit-scrollbar-thumb { background: var(--purple-deep); border-radius: 4px; }
+
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  animation: rowIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.name-row.removing {
+  animation: rowOut 0.3s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+@keyframes rowIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes rowOut {
+  to { opacity: 0; transform: translateX(20px); height: 0; }
+}
+
+.name-index {
+  width: 32px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.name-input {
+  flex: 1;
+  height: 48px;
+  background: rgba(20, 8, 30, 0.55);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0 16px;
+  color: var(--fg);
+  font-size: 15px;
+  outline: none;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.name-input::placeholder { color: var(--muted); }
+.name-input:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15), 0 0 24px rgba(168, 85, 247, 0.25);
+  background: rgba(30, 12, 45, 0.6);
+}
+
+.remove-btn {
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.remove-btn:hover {
+  color: var(--purple-bright);
+  border-color: var(--purple);
+  background: rgba(168, 85, 247, 0.08);
+}
+
+/* === Контролы === */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn {
+  position: relative;
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.btn-secondary {
+  background: rgba(168, 85, 247, 0.06);
+  border: 1px solid var(--line);
+  color: var(--fg);
+}
+.btn-secondary:hover {
+  background: rgba(168, 85, 247, 0.12);
+  border-color: var(--purple);
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.2);
+}
+.btn-secondary .plus {
+  font-size: 18px;
+  color: var(--purple-bright);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--purple-deep), var(--purple));
+  color: white;
+  padding: 16px 48px;
+  font-size: 16px;
+  letter-spacing: 0.2em;
+  box-shadow:
+    0 0 0 1px rgba(192, 132, 252, 0.4),
+    0 8px 32px rgba(168, 85, 247, 0.4),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-primary:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px rgba(192, 132, 252, 0.6),
+    0 12px 48px rgba(168, 85, 247, 0.6),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.btn-primary:not(:disabled):active { transform: translateY(0); }
+.btn-primary:disabled {
+  opacity: 0.35;
+  filter: grayscale(0.4);
+}
+
+.btn-primary .btn-glow {
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, transparent, var(--purple-bright), transparent);
+  filter: blur(12px);
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s;
+}
+.btn-primary:not(:disabled):hover .btn-glow { opacity: 1; }
+
+.counter {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  font-variant-numeric: tabular-nums;
+}
+#count { color: var(--purple-bright); font-weight: 700; }
+
+/* ============================== */
+/* === СЛОТ МАШИНА === */
+/* ============================== */
+#slot-screen {
+  gap: 40px;
+}
+
+.slot-frame {
+  position: relative;
+  padding: 32px;
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(20, 8, 30, 0.7), rgba(8, 4, 14, 0.85));
+  border: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 0 1px rgba(192, 132, 252, 0.1),
+    0 30px 80px rgba(0, 0, 0, 0.6);
+  animation: frameIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards 0.2s;
+}
+@keyframes frameIn {
+  from { opacity: 0; transform: scale(0.85) translateY(40px); filter: blur(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+}
+
+.slot-glow {
+  position: absolute;
+  inset: -40px;
+  background:
+    radial-gradient(ellipse at center, rgba(168, 85, 247, 0.4), transparent 65%);
+  filter: blur(40px);
+  z-index: -1;
+  opacity: 0.7;
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+.slot-glow.spinning {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.slot-machine {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px;
+  background: #08040e;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 2px 12px rgba(0,0,0,0.8),
+    inset 0 0 0 1px rgba(168, 85, 247, 0.15);
+  overflow: hidden;
+}
+
+.reel {
+  position: relative;
+  width: 130px;
+  height: 240px; /* 3 ряда по 80px */
+  background: #0a0512;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.08);
+}
+
+.reel::before, .reel::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 50px;
+  z-index: 4;
+  pointer-events: none;
+}
+.reel::before {
+  top: 0;
+  background: linear-gradient(180deg, #08040e 0%, rgba(8, 4, 14, 0.85) 50%, transparent 100%);
+}
+.reel::after {
+  bottom: 0;
+  background: linear-gradient(0deg, #08040e 0%, rgba(8, 4, 14, 0.85) 50%, transparent 100%);
+}
+
+.reel-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.reel-cell {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--fg);
+  text-align: center;
+  padding: 4px 8px;
+  word-break: break-word;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Подсветка центрального ряда после спина */
+.payline {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 50%;
+  height: 80px;
+  transform: translateY(-50%) scaleX(0.6);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 3;
+  border: 1px solid transparent;
+  opacity: 0;
+  background: transparent;
+}
+.slot-machine.win .payline {
+  animation: paylineIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* появление: разлетается по горизонтали + проявляется свечение, без последующей пульсации */
+@keyframes paylineIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-50%) scaleX(0.6);
+    border-color: transparent;
+    background: rgba(168, 85, 247, 0);
+    box-shadow:
+      0 0 0 1px rgba(192, 132, 252, 0),
+      0 0 0 rgba(168, 85, 247, 0);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-50%) scaleX(1.04);
+    border-color: var(--purple-bright);
+    background: rgba(168, 85, 247, 0.08);
+    box-shadow:
+      0 0 0 1px rgba(192, 132, 252, 0.65),
+      0 0 48px rgba(192, 132, 252, 0.95),
+      0 0 120px rgba(168, 85, 247, 0.65),
+      inset 0 0 36px rgba(168, 85, 247, 0.28);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(-50%) scaleX(1);
+    border-color: var(--purple-bright);
+    background: rgba(168, 85, 247, 0.06);
+    box-shadow:
+      0 0 0 1px rgba(192, 132, 252, 0.55),
+      0 0 30px rgba(168, 85, 247, 0.75),
+      0 0 80px rgba(168, 85, 247, 0.5),
+      inset 0 0 28px rgba(168, 85, 247, 0.2);
+  }
+}
+
+/* Подсветка победной ячейки — поочерёдное появление, без бесконечного мерцания */
+.reel-cell.winner {
+  color: #fff;
+  animation: winnerIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.reel[data-reel="0"] .reel-cell.winner { animation-delay: 0s; }
+.reel[data-reel="1"] .reel-cell.winner { animation-delay: 0.18s; }
+.reel[data-reel="2"] .reel-cell.winner { animation-delay: 0.36s; }
+
+@keyframes winnerIn {
+  0% {
+    text-shadow: 0 0 0 transparent;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    text-shadow:
+      0 0 12px #fff,
+      0 0 28px var(--purple-bright),
+      0 0 56px var(--purple-bright),
+      0 0 100px var(--purple);
+    transform: scale(1.18);
+    filter: brightness(1.9);
+  }
+  100% {
+    text-shadow:
+      0 0 8px var(--purple-bright),
+      0 0 16px var(--purple-bright),
+      0 0 32px var(--purple),
+      0 0 64px var(--purple);
+    transform: scale(1);
+    filter: brightness(1.3);
+  }
+}
+
+.slot-label {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg);
+  padding: 4px 14px;
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+
+/* === Победный баннер === */
+.winner-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  /* резервируем итоговую высоту заранее, чтобы при подстановке
+     имени слот не подпрыгивал вверх */
+  min-height: clamp(54px, 9vw, 72px);
+  justify-content: center;
+}
+.winner-banner.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.winner-text {
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: var(--muted);
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+.winner-name {
+  display: block;
+  font-size: clamp(28px, 5vw, 42px);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  background: linear-gradient(135deg, #fff, var(--purple-bright), #e9d5ff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 24px rgba(168, 85, 247, 0.6));
+  line-height: 1.05;
+  min-height: 1.05em;        /* высота строки даже когда span пустой */
+}
+.winner-name::before {
+  content: '\200b';           /* zero-width space — гарантирует inline-box */
+}
+
+.restart-btn {
+  opacity: 0;
+  transition: opacity 0.6s ease 0.3s;
+}
+.restart-btn.show { opacity: 1; }
+
+/* === Мобильная адаптация === */
+@media (max-width: 520px) {
+  .reel { width: 95px; height: 195px; }
+  .reel-cell { height: 65px; font-size: 14px; }
+  .payline { height: 65px; }
+  .slot-frame { padding: 20px; }
+  .btn-primary { padding: 14px 36px; }
+}

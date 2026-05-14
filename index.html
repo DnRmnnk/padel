@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Кто сегодня платит за падел</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Кастомный курсор -->
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <!-- Анимированный фон -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Контент -->
+  <main class="container">
+    <!-- ЭКРАН 1: ввод имён -->
+    <section id="input-screen" class="screen active">
+      <h1 class="title">
+        <span class="title-line">КТО СЕГОДНЯ ПЛАТИТ</span>
+        <span class="title-line accent">ЗА ПАДЕЛ?</span>
+      </h1>
+      <p class="subtitle">Введи имена игроков и крути слот</p>
+
+      <div id="names-list" class="names-list"></div>
+
+      <div class="controls">
+        <button id="add-btn" class="btn btn-secondary" aria-label="Добавить игрока">
+          <span class="plus">+</span>
+          <span>Добавить</span>
+        </button>
+        <button id="spin-btn" class="btn btn-primary" disabled>
+          <span class="btn-label">SPIN</span>
+          <span class="btn-glow"></span>
+        </button>
+      </div>
+
+      <div class="counter">
+        <span id="count">0</span> / 10
+      </div>
+    </section>
+
+    <!-- ЭКРАН 2: слот машина -->
+    <section id="slot-screen" class="screen">
+      <div class="slot-frame">
+        <div class="slot-glow"></div>
+        <div class="slot-machine">
+          <div class="reel" data-reel="0">
+            <div class="reel-strip"></div>
+          </div>
+          <div class="reel" data-reel="1">
+            <div class="reel-strip"></div>
+          </div>
+          <div class="reel" data-reel="2">
+            <div class="reel-strip"></div>
+          </div>
+          <div class="payline"></div>
+        </div>
+        <div class="slot-label">PAYS FOR PADEL</div>
+      </div>
+
+      <div id="winner-banner" class="winner-banner">
+        <span class="winner-text">ПЛАТИТ</span>
+        <span id="winner-name" class="winner-name"></span>
+      </div>
+
+      <button id="restart-btn" class="btn btn-secondary restart-btn">
+        <span>← Заново</span>
+      </button>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

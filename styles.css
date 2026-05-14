@@ -23,9 +23,15 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   overflow: hidden;
   cursor: none;
+  /* отключаем системные эффекты на тач-устройствах */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 button, input { cursor: none; font-family: inherit; }
+input { -webkit-appearance: none; appearance: none; }
 
 /* === Кастомный курсор === */
 .cursor-dot, .cursor-ring {
@@ -101,10 +107,16 @@ body::before {
   z-index: 2;
   width: 100%;
   height: 100vh;
+  /* dvh точнее учитывает динамические панели iOS/Android */
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding:
+    max(24px, env(safe-area-inset-top))
+    max(24px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom))
+    max(24px, env(safe-area-inset-left));
 }
 
 .screen {
@@ -202,13 +214,15 @@ body::before {
 
 .name-input {
   flex: 1;
+  width: 100%;
+  min-width: 0;
   height: 48px;
   background: rgba(20, 8, 30, 0.55);
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 0 16px;
   color: var(--fg);
-  font-size: 15px;
+  font-size: 16px; /* 16px чтобы iOS Safari не зумил при фокусе */
   outline: none;
   backdrop-filter: blur(8px);
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
@@ -583,11 +597,175 @@ body::before {
 }
 .restart-btn.show { opacity: 1; }
 
-/* === Мобильная адаптация === */
+/* ============================== */
+/* === МОБИЛЬНАЯ АДАПТАЦИЯ === */
+/* ============================== */
+
+/* Планшеты и крупные мобильные (≤768px) */
+@media (max-width: 768px) {
+  .container { padding: 20px; }
+  .screen { gap: 22px; }
+  #slot-screen { gap: 28px; }
+  .title { font-size: clamp(26px, 7vw, 38px); }
+  .subtitle { font-size: 12px; }
+  .names-list { max-height: 42vh; }
+}
+
+/* Мобильные (≤520px) */
 @media (max-width: 520px) {
-  .reel { width: 95px; height: 195px; }
-  .reel-cell { height: 65px; font-size: 14px; }
-  .payline { height: 65px; }
-  .slot-frame { padding: 20px; }
-  .btn-primary { padding: 14px 36px; }
+  .container { padding: 16px; }
+
+  /* Заголовок */
+  .title { font-size: clamp(22px, 7.5vw, 32px); }
+  .subtitle { font-size: 11px; letter-spacing: 0.06em; }
+
+  /* Имена */
+  .names-list {
+    gap: 8px;
+    max-height: 38vh;
+  }
+  .name-row { gap: 8px; }
+  .name-index {
+    width: 24px;
+    height: 44px;
+    font-size: 12px;
+  }
+  .name-input {
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+  }
+  .remove-btn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+
+  /* Контролы */
+  .controls { gap: 12px; width: 100%; }
+  .btn { padding: 12px 18px; font-size: 13px; }
+  .btn-primary {
+    padding: 14px 36px;
+    font-size: 14px;
+    letter-spacing: 0.16em;
+    flex: 1;
+    max-width: 220px;
+    justify-content: center;
+  }
+  .btn-secondary { flex-shrink: 0; }
+
+  /* Слот */
+  #slot-screen { gap: 24px; }
+  .slot-frame {
+    padding: 18px;
+    border-radius: 22px;
+  }
+  .slot-machine {
+    gap: 6px;
+    padding: 8px;
+    border-radius: 14px;
+  }
+  .reel {
+    /* три барабана плюс gap'ы — должны помещаться по ширине */
+    width: calc((100vw - 32px - 36px - 12px) / 3);
+    max-width: 105px;
+    min-width: 70px;
+    height: 195px;
+    border-radius: 8px;
+  }
+  .reel::before, .reel::after { height: 38px; }
+  .reel-cell {
+    height: 65px;
+    font-size: 13px;
+    padding: 3px 4px;
+  }
+  .payline {
+    left: 8px;
+    right: 8px;
+    height: 65px;
+    border-radius: 6px;
+  }
+  .slot-label {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    padding: 3px 10px;
+  }
+
+  /* Победный баннер */
+  .winner-banner {
+    min-height: clamp(48px, 14vw, 60px);
+  }
+  .winner-name {
+    font-size: clamp(24px, 8vw, 34px);
+  }
+  .winner-text { font-size: 10px; }
+}
+
+/* Узкие телефоны (≤380px — iPhone SE, маленькие Android) */
+@media (max-width: 380px) {
+  .container { padding: 14px; }
+  .title { font-size: clamp(20px, 8vw, 26px); }
+  .subtitle { font-size: 10px; }
+
+  .name-index { width: 20px; font-size: 11px; }
+  .name-input { font-size: 16px; }
+
+  .reel {
+    height: 165px;
+    min-width: 62px;
+  }
+  .reel-cell {
+    height: 55px;
+    font-size: 11px;
+  }
+  .payline { height: 55px; }
+
+  .btn-primary {
+    padding: 12px 28px;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+  }
+  .btn-secondary { padding: 10px 14px; font-size: 12px; }
+}
+
+/* Landscape на мобильных — экран по высоте ужат */
+@media (max-height: 560px) and (orientation: landscape) {
+  .container { padding: 12px; }
+  .screen { gap: 14px; }
+  #slot-screen { gap: 14px; }
+  .title { font-size: clamp(20px, 4vh, 28px); }
+  .names-list { max-height: 50vh; }
+  .reel { height: 165px; }
+  .reel-cell { height: 55px; font-size: 13px; }
+  .payline { height: 55px; }
+  .slot-frame { padding: 14px; }
+  .winner-name { font-size: clamp(22px, 5vh, 32px); }
+}
+
+/* Тач-устройства: убираем кастомный курсор полностью и hover-стили */
+@media (hover: none) and (pointer: coarse) {
+  html, body, button, input { cursor: auto; }
+  .cursor-dot, .cursor-ring { display: none !important; }
+
+  /* нативные hover'ы не нужны — отменяем их визуальные эффекты */
+  .btn-secondary:hover {
+    background: rgba(168, 85, 247, 0.06);
+    border-color: var(--line);
+    box-shadow: none;
+  }
+  .remove-btn:hover {
+    color: var(--muted);
+    border-color: var(--line);
+    background: transparent;
+  }
+
+  /* активное состояние взамен hover */
+  .btn:active { transform: scale(0.97); }
+  .btn-primary:not(:disabled):active {
+    transform: scale(0.97);
+    box-shadow:
+      0 0 0 1px rgba(192, 132, 252, 0.6),
+      0 4px 24px rgba(168, 85, 247, 0.5);
+  }
 }

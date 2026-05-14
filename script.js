@@ -243,13 +243,24 @@ function showSlotScreen() {
 /* =====================================================
  *  СЛОТ МАШИНА — анимация прокрута
  * ===================================================== */
-const CELL_H = 80;          // высота ячейки в px (десктоп)
-const CELL_H_MOBILE = 65;
 const VISIBLE_ROWS = 3;
 const STRIP_SIZE = 40;      // ячеек в ленте — много, чтобы создавалась иллюзия бесконечности
 
+/**
+ * Высота одной ячейки барабана. Считается из реального размера .reel
+ * в DOM — так JS всегда совпадает с CSS на любом брейкпоинте
+ * (десктоп / планшет / мобайл / узкий мобайл / landscape).
+ */
 function cellHeight() {
-  return window.innerWidth <= 520 ? CELL_H_MOBILE : CELL_H;
+  const reel = document.querySelector('.reel');
+  if (reel) {
+    const h = reel.getBoundingClientRect().height / VISIBLE_ROWS;
+    if (h > 10) return h;
+  }
+  // фолбек, если барабанов ещё нет в DOM
+  if (window.innerWidth <= 380) return 55;
+  if (window.innerWidth <= 520) return 65;
+  return 80;
 }
 
 function shuffle(arr) {
